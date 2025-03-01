@@ -1,19 +1,23 @@
-# Fundamentos de metagenomica CEM 2025
-## Curso CEM, 01/03/2025
-## Clase 2 - Parte 1
+# Fundamentos de la Metagenómica: Una guía práctica para el diseño y análisis de secuenciación de amplicón
 
-# -------------------------------------
-# 0) Preparación del entorno de trabajo
-# -------------------------------------
+- Curso del Centro de Especialización Multidisciplinario
 
-# Cargar librerías necesarias
+- Fecha del curso: 01/03/2025
+
+- Clase 2 - Parte 1
+
+# Flujo de trabajo:
+## 0) Preparación del entorno de trabajo
+
+```
+#Cargar librerías necesarias
 library(dada2)
 library(ShortRead)
 
-# Configurar la semilla para reproducibilidad
+#Configurar la semilla para reproducibilidad
 set.seed(123)
 
-# Establecer el directorio de trabajo
+#Establecer el directorio de trabajo
 path <- "/ruto/al/directorio"
 setwd(path)
 
@@ -29,13 +33,13 @@ sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
 
 # Visualizar perfiles de calidad de las lecturas
 plotQualityProfile(fnFs[1:2])
+```
 
-# -------------------------------------
-# 0.1) Creación de un subset de lecturas
-# -------------------------------------
+## 0.1) Creación de un subset de lecturas
+
+```
 # no correr (demora)
-
-#n_reads <- 10000  # Número de lecturas a muestrear
+# n_reads <- 10000  # Número de lecturas a muestrear
 
 # Crear subset de lecturas
 # for (i in seq_along(fnFs)) {
@@ -47,11 +51,11 @@ plotQualityProfile(fnFs[1:2])
 #   subsetR <- yield(samplerR)
 #   writeFastq(subsetR, file.path(path, paste0("subset_", basename(fnRs[i]))), compress = TRUE)
 # }
+```
 
-# -------------------------------------
-# 0.2) Cargar subset pre-obtenido
-# -------------------------------------
+ ## 0.2) Cargar subset pre-obtenido
 
+```
 path <- "/ruto/al/directorio/subset"
 list.files(path)
 
@@ -60,11 +64,11 @@ n <- 10
 subset_fnFs <- fnFs[1:n]
 subset_fnRs <- fnRs[1:n]
 sample.names <- sapply(strsplit(basename(subset_fnFs), "_"), `[`, 2)
+```
 
-# -------------------------------------
-# 1) Filtrado de secuencias
-# -------------------------------------
+## 1) Filtrado de secuencias
 
+```
 # Crear subdirectorio para archivos filtrados
 filt_path <- file.path(path, "filtered_sub")
 if (!dir.exists(filt_path)) dir.create(filt_path)
@@ -89,39 +93,43 @@ out <- filterAndTrim(
 )
 
 head(out)
+```
 
-# -------------------------------------
-# 2) Estimación de tasas de error
-# -------------------------------------
 
+## 2) Estimación de tasas de error
+
+```
 errF <- learnErrors(filtFs, multithread = TRUE)  # ~5 minutos
 errR <- learnErrors(filtRs, multithread = TRUE)  # ~5 minutos
 
 # Visualizar errores
 plotErrors(errF, nominalQ = TRUE)
+```
 
-# -------------------------------------
-# 2.1) OPCIONAL: Dereplicación de secuencias redundantes
-# -------------------------------------
 
+## 2.1) OPCIONAL: Dereplicación de secuencias redundantes
+
+```
 # derepFs <- derepFastq(filtFs, verbose = TRUE)
 # derepRs <- derepFastq(filtRs, verbose = TRUE)
 # Si se opta por dereplicar, asegurarse de cambiar el input en el siguiente paso.
+```
 
-# -------------------------------------
-# 3) Inferencia de ASVs
-# -------------------------------------
 
+## 3) Inferencia de ASVs
+
+```
 dadaFs <- dada(filtFs, err = errF, multithread = TRUE)
 dadaRs <- dada(filtRs, err = errR, multithread = TRUE)
 
 # Inspeccionar el resultado de la inferencia
 dadaFs[[1]]
+```
 
-# -------------------------------------
-# 4) Unión de lecturas (merging)
-# -------------------------------------
 
+## 4) Unión de lecturas (merging)
+
+```
 mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose = TRUE)
 
 # Inspeccionar el resultado de la unión
@@ -133,19 +141,21 @@ dim(seqtab)
 
 # Ver distribución de longitudes de secuencias
 table(nchar(getSequences(seqtab)))
+```
 
-# -------------------------------------
-# 5) Remoción de quimeras
-# -------------------------------------
 
+## 5) Remoción de quimeras
+
+```
 seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread = TRUE, verbose = TRUE)
 dim(seqtab.nochim)
 sum(seqtab.nochim) / sum(seqtab)
+```
 
-# -------------------------------------
-# 6) Resumen del proceso
-# -------------------------------------
 
+## 6) Resumen del proceso
+
+```
 getN <- function(x) sum(getUniques(x))
 track <- cbind(
   out,
@@ -161,3 +171,5 @@ rownames(track) <- sample.names
 
 # Ver resumen
 head(track)
+```
+
